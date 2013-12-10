@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:jaxws="http://cxf.apache.org/jaxws"
-	xmlns:p="http://www.springframework.org/schema/p"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
 		http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
@@ -10,19 +10,14 @@
 		http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring-2.8.2.xsd
 ">
 
-	<!-- see http://cxf.apache.org/docs/using-the-jmsconfigfeature.html -->
-	<jaxws:endpoint id="GadgetService" 
-		xmlns:gadget="http://gadgetservice.example.com/"
-		address="camel://direct:GadgetService"
-		serviceName="gadget:GadgetService"
-		endpointName="gadget:GadgetServiceEndpoint"
-		implementor="com.example.gadgetservice.impl.GadgetServiceImpl">
-		<jaxws:features>
-			<bean class="org.apache.cxf.feature.LoggingFeature" />
-		</jaxws:features>
-	</jaxws:endpoint>
+	<jaxws:client id="client"
+		xmlns:worker="http://workerservice.example.com/"
+		serviceName="worker:WorkerService"
+		endpointName="worker:WorkerServiceEndpoint" address="camel://direct:WorkerServiceClient"
+		serviceClass="com.example.workerservice.WorkerService">
+	</jaxws:client>
 	
-	<!-- Camel transport for CXF -->
+		<!-- Camel transport for CXF -->
 	<bean class="org.apache.camel.component.cxf.transport.CamelTransportFactory">
 		<property name="bus" ref="cxf" />
 		<property name="camelContext" ref="camelContext" />
@@ -35,9 +30,10 @@
 
 	<camelContext id="camelContext" trace="true" xmlns="http://camel.apache.org/schema/spring">
 		<route>
-			<from uri="jms://topic:GadgetService.Entry" />
+			<from uri="direct:WorkerServiceClient" />
+			<convertBodyTo type="java.lang.String" charset="utf-8"/>
 			<to uri="log:com.example.in" />
-			<to uri="direct:GadgetService" />
+			<to uri="jms://topic:WorkerService.Entry" />
 			<to uri="log:com.example.out" />
 		</route>
 	</camelContext>
@@ -46,19 +42,17 @@
 		<property name="connectionFactory" ref="amqJmsConnectionFactory" />
 	</bean>
 
-	<!-- A config for SonicMQ
-	
+	<!-- A config for SonicMQ 
 	<bean id="sonicJmsConnectionFactory" class="progress.message.jclient.ConnectionFactory">
     	<property name="brokerURL" value="tcp://localhost:2506" />
     	<property name="defaultUser" value="Administrator" />
     	<property name="defaultPassword" value="Administrator" />
 	</bean>
-	 -->
+	-->
 
 	<!-- A config for Apache ActiveMQ -->
-		
 	<bean id="amqJmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
 		<property name="brokerURL" value="tcp://localhost:61616" />
 	</bean>
-			
+
 </beans>
