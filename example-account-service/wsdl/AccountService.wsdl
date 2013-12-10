@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="AccountService"
+        targetNamespace="http://accountservice.example.com/"
+        xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+        xmlns:tns="http://accountservice.example.com/"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    <wsdl:types>
+        <xsd:schema attributeFormDefault="unqualified" elementFormDefault="unqualified"
+                xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                targetNamespace="http://accountservice.example.com/"
+                xmlns:tns="http://accountservice.example.com/">
+            <xsd:element name="checkCredit" type="tns:checkCredit"/>
+            
+                <xsd:complexType name="checkCredit">
+                	<xsd:sequence>
+                		<xsd:element name="account" type="xsd:string" />
+                		<xsd:element name="amount" type="xsd:decimal" />
+                	</xsd:sequence>
+                </xsd:complexType>
+            
+            <xsd:element name="checkCreditResponse">
+            	<xsd:complexType>
+            		<xsd:sequence>
+            			<xsd:element name="response" type="xsd:boolean" />
+            		</xsd:sequence>
+            	</xsd:complexType>
+            </xsd:element>
+		</xsd:schema>
+	</wsdl:types>
+	
+	<wsdl:message name="checkCredit">
+		<wsdl:part name="parameters" element="tns:checkCredit"/>
+	</wsdl:message>
+	<wsdl:message name="checkCreditResponse">
+		<wsdl:part name="parameters" element="tns:checkCreditResponse"/>
+	</wsdl:message>
+	<wsdl:portType name="AccountService">
+<!-- 		<jaxws:bindings xmlns:jaxws="http://java.sun.com/xml/ns/jaxws">
+        	<jaxws:enableWrapperStyle>true</jaxws:enableWrapperStyle>
+        </jaxws:bindings>  -->
+		<wsdl:operation name="checkCredit">
+			<wsdl:input name="checkCredit" message="tns:checkCredit"/>
+			<wsdl:output name="checkCreditResponse" message="tns:checkCreditResponse"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="AccountServiceSoapBinding"
+		type="tns:AccountService">
+		<soap:binding style="document"
+			transport="http://schemas.xmlsoap.org/soap/http" />
+		<wsdl:operation name="checkCredit">
+			<soap:operation soapAction="" style="document" />
+			<wsdl:input name="checkCredit">
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output name="checkCreditResponse">
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="AccountService">
+		<wsdl:port name="AccountServicePort" binding="tns:AccountServiceSoapBinding">
+			<soap:address location="http://localhost:9010/account" />
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>
