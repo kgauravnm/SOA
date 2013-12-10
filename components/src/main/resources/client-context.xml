@@ -10,10 +10,10 @@
 ">
 
 	<jaxws:client id="client"
-		xmlns:widget="http://widgetservice.example.com/"
-		serviceName="widget:WidgetService"
-		endpointName="widget:WidgetServiceEndpoint" address="jms://"
-		serviceClass="com.example.widgetservice.WidgetService">
+		xmlns:component="http://componentservice.example.com/"
+		serviceName="component:ComponentService"
+		endpointName="component:ComponentServiceEndpoint" address="jms://"
+		serviceClass="com.example.componentservice.ComponentService">
 		<jaxws:features>
 			<bean class="org.apache.cxf.transport.jms.JMSConfigFeature">
 	    		<property name="jmsConfig" ref="amqJmsConfig"/>
@@ -38,7 +38,7 @@
 	<!-- A config for Apache ActiveMQ -->
 	<bean id="amqJmsConfig" class="org.apache.cxf.transport.jms.JMSConfiguration">
     	<property name="connectionFactory" ref="amqJmsConnectionFactory" />
-		<property name="targetDestination" value="WidgetService.Entry" />
+		<property name="targetDestination" value="ComponentService.Entry" />
 		<property name="pubSubDomain" value="false" />
 	</bean>
 		

@@ -1,4 +1,4 @@
-package com.example.widgetservice.server;
+package com.example.componentservice.server;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 

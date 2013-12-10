@@ -10,12 +10,12 @@
 ">
 
 	<!-- see http://cxf.apache.org/docs/using-the-jmsconfigfeature.html -->
-	<jaxws:endpoint id="WidgetService" 
-		xmlns:widget="http://widgetservice.example.com/"
+	<jaxws:endpoint id="ComponentService" 
+		xmlns:component="http://componentservice.example.com/"
 		address="jms://"
-		serviceName="widget:WidgetService"
-		endpointName="widget:WidgetServiceEndpoint"
-		implementor="com.example.widgetservice.impl.WidgetServiceImpl">
+		serviceName="component:ComponentService"
+		endpointName="component:ComponentServiceEndpoint"
+		implementor="com.example.componentservice.impl.ComponentServiceImpl">
 		<jaxws:features>
 			<bean class="org.apache.cxf.transport.jms.JMSConfigFeature">
     			<property name="jmsConfig" ref="amqJmsConfig" />
@@ -24,12 +24,12 @@
 		</jaxws:features>
 	</jaxws:endpoint>
 
-	<jaxws:endpoint id="WidgetServiceHTTP" 
-		xmlns:widget="http://widgetservice.example.com/"
-		address="http://localhost:9003/widget"
-		serviceName="widget:WidgetService"
-		endpointName="widget:WidgetServiceEndpointHTTP"
-		implementor="com.example.widgetservice.impl.WidgetServiceImpl">
+	<jaxws:endpoint id="ComponentServiceHTTP" 
+		xmlns:component="http://componentservice.example.com/"
+		address="http://localhost:9003/component"
+		serviceName="component:ComponentService"
+		endpointName="component:ComponentServiceEndpointHTTP"
+		implementor="com.example.componentservice.impl.ComponentServiceImpl">
 		<jaxws:features>
 			<bean class="org.apache.cxf.feature.LoggingFeature" />
 		</jaxws:features>
@@ -52,7 +52,7 @@
 	<!-- A config for Apache ActiveMQ -->
 	<bean id="amqJmsConfig" class="org.apache.cxf.transport.jms.JMSConfiguration">
     	<property name="connectionFactory" ref="amqJmsConnectionFactory" />
-		<property name="targetDestination" value="WidgetService.Entry" />
+		<property name="targetDestination" value="ComponentService.Entry" />
 		<property name="pubSubDomain" value="false" />
 	</bean>
 		

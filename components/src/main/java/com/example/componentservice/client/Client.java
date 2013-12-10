@@ -1,8 +1,8 @@
-package com.example.widgetservice.client;
+package com.example.componentservice.client;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import com.example.widgetservice.WidgetService;
+import com.example.componentservice.ComponentService;
 
 public final class Client
 {
@@ -10,7 +10,7 @@ public final class Client
 	{
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("client-context.xml");
 
-		WidgetService client = context.getBean("client", WidgetService.class);
+		ComponentService client = context.getBean("client", ComponentService.class);
 
 		System.out.println("Trying to check 5 pieces of a product p-0001...");
 		System.out.println("- response: " + client.checkInventory("p-0001", 5));
