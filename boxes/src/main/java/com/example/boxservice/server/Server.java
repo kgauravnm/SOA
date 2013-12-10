@@ -1,4 +1,4 @@
-package com.example.accountservice.server;
+package com.example.boxservice.server;
 
 import java.io.IOException;
 

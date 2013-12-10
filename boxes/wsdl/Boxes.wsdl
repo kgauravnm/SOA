@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions name="AccountService"
-        targetNamespace="http://accountservice.example.com/"
+<wsdl:definitions name="BoxService"
+        targetNamespace="http://boxservice.example.com/"
         xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-        xmlns:tns="http://accountservice.example.com/"
+        xmlns:tns="http://boxservice.example.com/"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
         xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     <wsdl:types>
         <xsd:schema attributeFormDefault="unqualified" elementFormDefault="unqualified"
                 xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                targetNamespace="http://accountservice.example.com/"
-                xmlns:tns="http://accountservice.example.com/">
+                targetNamespace="http://boxservice.example.com/"
+                xmlns:tns="http://boxservice.example.com/">
             <xsd:element name="checkCredit" type="tns:checkCredit"/>
             
                 <xsd:complexType name="checkCredit">
                 	<xsd:sequence>
-                		<xsd:element name="account" type="xsd:string" />
+                		<xsd:element name="box" type="xsd:string" />
                 		<xsd:element name="amount" type="xsd:decimal" />
                 	</xsd:sequence>
                 </xsd:complexType>
@@ -35,7 +35,7 @@
 	<wsdl:message name="checkCreditResponse">
 		<wsdl:part name="parameters" element="tns:checkCreditResponse"/>
 	</wsdl:message>
-	<wsdl:portType name="AccountService">
+	<wsdl:portType name="BoxService">
 <!-- 		<jaxws:bindings xmlns:jaxws="http://java.sun.com/xml/ns/jaxws">
         	<jaxws:enableWrapperStyle>true</jaxws:enableWrapperStyle>
         </jaxws:bindings>  -->
@@ -44,8 +44,8 @@
 			<wsdl:output name="checkCreditResponse" message="tns:checkCreditResponse"/>
 		</wsdl:operation>
 	</wsdl:portType>
-	<wsdl:binding name="AccountServiceSoapBinding"
-		type="tns:AccountService">
+	<wsdl:binding name="BoxServiceSoapBinding"
+		type="tns:BoxService">
 		<soap:binding style="document"
 			transport="http://schemas.xmlsoap.org/soap/http" />
 		<wsdl:operation name="checkCredit">
@@ -58,9 +58,9 @@
 			</wsdl:output>
 		</wsdl:operation>
 	</wsdl:binding>
-	<wsdl:service name="AccountService">
-		<wsdl:port name="AccountServicePort" binding="tns:AccountServiceSoapBinding">
-			<soap:address location="http://localhost:9010/account" />
+	<wsdl:service name="BoxService">
+		<wsdl:port name="BoxServicePort" binding="tns:BoxServiceSoapBinding">
+			<soap:address location="http://localhost:9010/box" />
 		</wsdl:port>
 	</wsdl:service>
 </wsdl:definitions>
