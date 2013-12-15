@@ -6,6 +6,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.example.carservice.Car;
 import com.example.carservice.CarService;
+import com.example.carservice.Manufacturer;
 
 public final class Client {
 	
@@ -28,6 +29,24 @@ public final class Client {
 		} catch (Exception e) {
 			LOGGER.info("- got an exception", e);
 		}
+		
+		Car car = new Car();
+		car.setId("2");
+		car.setModel("Signum");
+		car.setEngine("1.5");
+		car.setManufacturer(new Manufacturer());
+		car.getManufacturer().setCity("Heinburg");
+		car.getManufacturer().setCountry("Germany");
+		car.getManufacturer().setName("Opel");
+		
+		LOGGER.info("Trying to add a car with an id of 2...");
+		client.addCar(car);
+		LOGGER.info("Trying to find a added car with an id of 2...");
+		response = client.getInformation("2");
+		LOGGER.info("- response: {}", response);
+		
+		
+		
 
 		context.close();
 		System.exit(0);

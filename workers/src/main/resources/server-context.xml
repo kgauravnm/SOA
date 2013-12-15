@@ -11,6 +11,9 @@
 ">
 
 	<!-- see http://cxf.apache.org/docs/using-the-jmsconfigfeature.html -->
+	<!-- address for generating wsdl
+ 		address="http://localhost:9004/worker"  
+ 	-->
 	<jaxws:endpoint id="WorkerService" 
 		xmlns:worker="http://workerservice.example.com/"
 		address="camel://direct:WorkerService"

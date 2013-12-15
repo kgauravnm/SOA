@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
+		http://cxf.apache.org/jaxws http://cxf.apache.org/schemas/jaxws.xsd
+		http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring-2.8.2.xsd
+">
+
+	<jaxws:client id="boxes" 	
+		serviceClass="com.example.boxservice.BoxService"
+		address="http://localhost:9002/box" />
+	
+	<jaxws:client id="cars"
+		serviceClass="com.example.carservice.CarService"
+		address="http://localhost:9001/car" /> 
+
+	<jaxws:client id="components"
+		xmlns:component="http://componentservice.example.com/"
+		serviceName="component:ComponentService"
+		endpointName="component:ComponentServiceEndpoint" address="jms://"
+		serviceClass="com.example.componentservice.ComponentService">
+		<jaxws:features>
+			<bean class="org.apache.cxf.transport.jms.JMSConfigFeature">
+	    		<property name="jmsConfig" ref="amqJmsConfig"/>
+			</bean>
+		</jaxws:features>
+	</jaxws:client>
+	
+	<!-- A config for Apache ActiveMQ -->
+	<bean id="amqJmsConfig" class="org.apache.cxf.transport.jms.JMSConfiguration">
+    	<property name="connectionFactory" ref="amqJmsConnectionFactory" />
+		<property name="targetDestination" value="ComponentService.Entry" />
+		<property name="pubSubDomain" value="false" />
+	</bean>
+		
+	<jaxws:client id="workers"
+		xmlns:worker="http://workerservice.example.com/"
+		serviceName="worker:WorkerService"
+		endpointName="worker:WorkerServiceEndpoint" address="camel://direct:WorkerServiceClient"
+		serviceClass="com.example.workerservice.WorkerService">
+	</jaxws:client>
+	
+		<!-- Camel transport for CXF -->
+	<bean class="org.apache.camel.component.cxf.transport.CamelTransportFactory">
+		<property name="bus" ref="cxf" />
+		<property name="camelContext" ref="camelContext" />
+		<property name="transportIds">
+			<list>
+				<value>http://cxf.apache.org/transports/camel</value>
+			</list>
+		</property>
+	</bean>
+
+	<camelContext id="camelContext" trace="true" xmlns="http://camel.apache.org/schema/spring">
+		<route>
+			<from uri="direct:WorkerServiceClient" />
+			<convertBodyTo type="java.lang.String" charset="utf-8"/>
+			<to uri="log:com.example.in" />
+			<to uri="jms://topic:WorkerService.Entry" />
+			<to uri="log:com.example.out" />
+		</route>
+	</camelContext>
+	
+    <bean id="jms" class="org.apache.camel.component.jms.JmsComponent">
+		<property name="connectionFactory" ref="amqJmsConnectionFactory" />
+	</bean>
+
+	<!-- A config for Apache ActiveMQ -->
+	<bean id="amqJmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+		<property name="brokerURL" value="tcp://localhost:61616" />
+	</bean>
+
+	
+
+</beans>

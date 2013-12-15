@@ -13,24 +13,25 @@ public class BoxServiceImpl implements BoxService {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(BoxService.class);
 
-	Map<String, BigDecimal> boxs;
+	Map<String, Boolean> boxes;
 
 	public BoxServiceImpl() {
-		boxs = new HashMap<String, BigDecimal>();
-		boxs.put("a-0001", new BigDecimal(100));
-		boxs.put("a-0002", new BigDecimal(200));
-		boxs.put("a-0003", new BigDecimal(300));
+		boxes = new HashMap<String, Boolean>();
+		boxes.put("box-2", new Boolean(false));
+		boxes.put("box-2", new Boolean(true));
+		boxes.put("box-3", new Boolean(false));
 	}
 
 	@Override
-	public boolean checkCredit(String box, BigDecimal amount) {
-		BigDecimal amountAvailable = boxs.get(box);
-		boolean result = amountAvailable != null && amountAvailable.compareTo(amount) >= 0;
+	public boolean checkBoxFree(String box) {
+		LOGGER.info("Checking if box {} is free:", box);
+		
+		Boolean free = boxes.get(box);
+		boolean eviable = free != null && free.booleanValue();
+		
+		LOGGER.info(" - available = {}", eviable);
 
-		LOGGER.info("Checking credit for box {}, amount = {}:", box, amount);
-		LOGGER.info(" - available = {}, answer = {}", amountAvailable, result);
-
-		return result;
+		return eviable;
 	}
 
 }

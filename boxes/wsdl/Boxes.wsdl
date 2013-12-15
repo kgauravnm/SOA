@@ -10,16 +10,15 @@
                 xmlns:xsd="http://www.w3.org/2001/XMLSchema"
                 targetNamespace="http://boxservice.example.com/"
                 xmlns:tns="http://boxservice.example.com/">
-            <xsd:element name="checkCredit" type="tns:checkCredit"/>
+            <xsd:element name="checkBoxFree" type="tns:checkBoxFree"/>
             
-                <xsd:complexType name="checkCredit">
+                <xsd:complexType name="checkBoxFree">
                 	<xsd:sequence>
                 		<xsd:element name="box" type="xsd:string" />
-                		<xsd:element name="amount" type="xsd:decimal" />
                 	</xsd:sequence>
                 </xsd:complexType>
             
-            <xsd:element name="checkCreditResponse">
+            <xsd:element name="checkBoxFreeResponse">
             	<xsd:complexType>
             		<xsd:sequence>
             			<xsd:element name="response" type="xsd:boolean" />
@@ -29,31 +28,31 @@
 		</xsd:schema>
 	</wsdl:types>
 	
-	<wsdl:message name="checkCredit">
-		<wsdl:part name="parameters" element="tns:checkCredit"/>
+	<wsdl:message name="checkBoxFree">
+		<wsdl:part name="parameters" element="tns:checkBoxFree"/>
 	</wsdl:message>
-	<wsdl:message name="checkCreditResponse">
-		<wsdl:part name="parameters" element="tns:checkCreditResponse"/>
+	<wsdl:message name="checkBoxFreeResponse">
+		<wsdl:part name="parameters" element="tns:checkBoxFreeResponse"/>
 	</wsdl:message>
 	<wsdl:portType name="BoxService">
 <!-- 		<jaxws:bindings xmlns:jaxws="http://java.sun.com/xml/ns/jaxws">
         	<jaxws:enableWrapperStyle>true</jaxws:enableWrapperStyle>
         </jaxws:bindings>  -->
-		<wsdl:operation name="checkCredit">
-			<wsdl:input name="checkCredit" message="tns:checkCredit"/>
-			<wsdl:output name="checkCreditResponse" message="tns:checkCreditResponse"/>
+		<wsdl:operation name="checkBoxFree">
+			<wsdl:input name="checkBoxFree" message="tns:checkBoxFree"/>
+			<wsdl:output name="checkBoxFreeResponse" message="tns:checkBoxFreeResponse"/>
 		</wsdl:operation>
 	</wsdl:portType>
 	<wsdl:binding name="BoxServiceSoapBinding"
 		type="tns:BoxService">
 		<soap:binding style="document"
 			transport="http://schemas.xmlsoap.org/soap/http" />
-		<wsdl:operation name="checkCredit">
+		<wsdl:operation name="checkBoxFree">
 			<soap:operation soapAction="" style="document" />
-			<wsdl:input name="checkCredit">
+			<wsdl:input name="checkBoxFree">
 				<soap:body use="literal" />
 			</wsdl:input>
-			<wsdl:output name="checkCreditResponse">
+			<wsdl:output name="checkBoxFreeResponse">
 				<soap:body use="literal" />
 			</wsdl:output>
 		</wsdl:operation>

@@ -5,4 +5,5 @@ import javax.jws.WebService;
 @WebService
 public interface CarService {
 	Car getInformation(String id) throws NoSuchCarException;
+	void addCar(Car car);
 }

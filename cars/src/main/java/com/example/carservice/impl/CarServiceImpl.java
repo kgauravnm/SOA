@@ -46,4 +46,9 @@ public class CarServiceImpl implements CarService {
 			return c;
 		}
 	}
+
+	@Override
+	public void addCar(Car car) {
+		cars.put(car.getId(), car);
+	}
 }

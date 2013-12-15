@@ -18,9 +18,9 @@ public final class Client {
             = new ClassPathXmlApplicationContext("client-context.xml");
         BoxService boxService = (BoxService)context.getBean("boxService");
         
-        LOGGER.info("Test1 (enough money): result = {}", boxService.checkCredit("a-0001", new BigDecimal(100)));
-        LOGGER.info("Test2 (not enough money): result = {}", boxService.checkCredit("a-0001", new BigDecimal(1000)));
-        LOGGER.info("Test3 (unknown box): result = {}", boxService.checkCredit("a-9999", new BigDecimal(1)));
+        LOGGER.info("Test1 (box-1): result = {}", boxService.checkBoxFree("box-1"));
+        LOGGER.info("Test2 (box-2): result = {}", boxService.checkBoxFree("box-2"));
+        LOGGER.info("Test3 (unknown box): result = {}", boxService.checkBoxFree("box-9999"));
         
         context.close();
         System.exit(0);
