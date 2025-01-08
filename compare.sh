@@ -3,6 +3,7 @@
 # Hard-coded file names
 file1="file1.txt"
 file2="file2.txt"
+output_file="differences.txt"
 
 # Check if the files exist
 if [ ! -f "$file1" ]; then
@@ -15,13 +16,13 @@ if [ ! -f "$file2" ]; then
   exit 1
 fi
 
-# Use the diff command to compare the files
-echo "Comparing files '$file1' and '$file2':"
-diff_output=$(diff "$file1" "$file2")
+# Use the diff command to compare the files and write output to a file
+diff "$file1" "$file2" > "$output_file"
 
-# Check if there are differences
-if [ -z "$diff_output" ]; then
-  echo "The files are identical."
+# Check if the differences file is empty
+if [ -s "$output_file" ]; then
+  echo "Differences between '$file1' and '$file2' have been written to '$output_file'."
 else
-  echo "$diff_output"
+  echo "The files are identical. No differences found."
+  rm "$output_file" # Remove the empty file
 fi
