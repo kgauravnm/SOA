@@ -24,9 +24,25 @@ echo "Comparing $FILE1 and $FILE2..."
 {
     echo "Differences between $FILE1 and $FILE2:"
     echo "====================================="
-    diff "$FORMATTED_FILE1" "$FORMATTED_FILE2"
+    diff --label "$FILE1" --label "$FILE2" "$FORMATTED_FILE1" "$FORMATTED_FILE2" | while read -r line; do
+        if [[ "$line" =~ ^[0-9]+c[0-9]+$ ]]; then
+            echo "Change at line: $line"
+        elif [[ "$line" =~ ^\< ]]; then
+            echo "In $FILE1: $line"
+        elif [[ "$line" =~ ^\> ]]; then
+            echo "In $FILE2: $line"
+        elif [[ "$line" =~ ^---$ ]]; then
+            echo "----------------"
+        fi
+    done
 } > "$OUTPUT_FILE"
 
 # Check if there were differences
 if [ $? -eq 0 ]; then
-    echo "No differences found. The XML files
+    echo "No differences found. The XML files are identical."
+else
+    echo "Differences found. See $OUTPUT_FILE for details."
+fi
+
+# Clean up temporary files
+rm "$FORMATTED_FILE1" "$FORMATTED_FILE2"
