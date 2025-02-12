@@ -21,14 +21,12 @@ xmllint --format "$FILE2" > "$FORMATTED_FILE2"
 
 # Compare the formatted XML files and write differences to the output file
 echo "Comparing $FILE1 and $FILE2..."
-diff "$FORMATTED_FILE1" "$FORMATTED_FILE2" > "$OUTPUT_FILE"
+{
+    echo "Differences between $FILE1 and $FILE2:"
+    echo "====================================="
+    diff "$FORMATTED_FILE1" "$FORMATTED_FILE2"
+} > "$OUTPUT_FILE"
 
 # Check if there were differences
 if [ $? -eq 0 ]; then
-    echo "No differences found. The XML files are identical."
-else
-    echo "Differences found. See $OUTPUT_FILE for details."
-fi
-
-# Clean up temporary files
-rm "$FORMATTED_FILE1" "$FORMATTED_FILE2"
+    echo "No differences found. The XML files
