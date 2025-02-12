@@ -1,38 +1,34 @@
 #!/bin/bash
 
-# Input XML files
-FILE1=$1
-FILE2=$2
-OUTPUT_FILE=$3
+# Input file containing multiple XML documents
+input_file="multi_xml_file.xml"
 
-# Check if all arguments are provided
-if [ -z "$FILE1" ] || [ -z "$FILE2" ] || [ -z "$OUTPUT_FILE" ]; then
-    echo "Usage: $0 <file1.xml> <file2.xml> <output_diff_file>"
-    exit 1
-fi
+# Temporary file to hold individual XML documents
+temp_file=$(mktemp)
 
-# Temporary files for formatted XML
-FORMATTED_FILE1=$(mktemp)
-FORMATTED_FILE2=$(mktemp)
+# Counter to keep track of XML documents
+doc_count=0
 
-# Format the XML files using xmllint
-xmllint --format "$FILE1" > "$FORMATTED_FILE1"
-xmllint --format "$FILE2" > "$FORMATTED_FILE2"
+# Use awk to split the file into individual XML documents
+awk 'BEGIN { RS="</document>"; FS="\n" } {
+    if ($0 ~ /<document>/) {
+        doc_count++
+        print $0 "</document>" > "'"$temp_file"'_" doc_count ".xml"
+    }
+}' "$input_file"
 
-# Compare the formatted XML files and write differences to the output file
-echo "Comparing $FILE1 and $FILE2..."
-{
-    echo "Differences between $FILE1 and $FILE2:"
-    echo "====================================="
-    diff --label "$FILE1" --label "$FILE2" "$FORMATTED_FILE1" "$FORMATTED_FILE2"
-} > "$OUTPUT_FILE"
-
-# Check if there were differences
-if ! diff --label "$FILE1" --label "$FILE2" "$FORMATTED_FILE1" "$FORMATTED_FILE2" > /dev/null; then
-    echo "Differences found. See $OUTPUT_FILE for details."
-else
-    echo "No differences found. The XML files are identical."
-fi
+# Compare the XML documents
+for file in "${temp_file}_"*.xml; do
+    echo "Processing $file..."
+    # Use xmllint to format and validate the XML
+    xmllint --format "$file" --output "$file"
+    
+    # Example: Compare the current XML document with the first one
+    if [ "$file" != "${temp_file}_1.xml" ]; then
+        echo "Comparing ${temp_file}_1.xml with $file..."
+        diff "${temp_file}_1.xml" "$file"
+    fi
+done
 
 # Clean up temporary files
-rm "$FORMATTED_FILE1" "$FORMATTED_FILE2"
+rm "${temp_file}_"*.xml
