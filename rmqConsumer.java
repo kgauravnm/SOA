@@ -2,11 +2,15 @@ import com.rabbitmq.client.*;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 public class RabbitMqConsumer {
 
     private static final String QUEUE_NAME = "my_queue";
+    private static final String DLX_NAME = "dlx_exchange";
+    private static final String DLQ_NAME = "dlx_queue";
     private static final String RABBITMQ_HOST = "localhost";
 
     public static void main(String[] args) {
@@ -20,8 +24,20 @@ public class RabbitMqConsumer {
             Connection connection = factory.newConnection();
             Channel channel = connection.createChannel();
 
-            // Declare queue (in case it's not already created)
-            channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+            // Declare DLX (Dead Letter Exchange)
+            channel.exchangeDeclare(DLX_NAME, BuiltinExchangeType.DIRECT, true);
+
+            // Declare DLQ (Dead Letter Queue)
+            channel.queueDeclare(DLQ_NAME, true, false, false, null);
+            channel.queueBind(DLQ_NAME, DLX_NAME, "dlx_routing_key");
+
+            // Declare main queue with DLX settings
+            Map<String, Object> args = new HashMap<>();
+            args.put("x-dead-letter-exchange", DLX_NAME);
+            args.put("x-dead-letter-routing-key", "dlx_routing_key");
+
+            channel.queueDeclare(QUEUE_NAME, true, false, false, args);
+
             System.out.println("Waiting for messages...");
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -29,7 +45,7 @@ public class RabbitMqConsumer {
                 String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
                 System.out.println("Received message: " + message);
 
-                // Process the message and send ACK with retry
+                // Process message and send ACK with retry
                 processAndAcknowledgeMessage(channel, deliveryTag);
             };
 
@@ -76,10 +92,10 @@ public class RabbitMqConsumer {
             backoffMillis *= 2;
         }
 
-        // If all retries fail, reject the message (move to DLQ or requeue)
+        // If all retries fail, move the message to the DLQ
         try {
-            channel.basicNack(deliveryTag, false, true);  // Requeue the message
-            System.err.println("Message requeued after failed retries.");
+            channel.basicNack(deliveryTag, false, false); // Move to DLQ
+            System.err.println("Message moved to Dead Letter Queue after failed retries.");
         } catch (IOException e) {
             System.err.println("Failed to NACK message.");
         }
