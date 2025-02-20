@@ -9,7 +9,6 @@ fi
 FILE1="$1"
 FILE2="$2"
 DIFF_FILE="differences.txt"
-HTML_FILE="differences.html"
 
 # Temporary files to store individual XML documents
 TEMP1=$(mktemp)
@@ -20,30 +19,15 @@ normalize_xml() {
     xmllint --format - | sed 's/>\s*</></g' | tr -d '\n'
 }
 
-# Function to compare two files line by line and write differences
+# Function to compare two files line by line and write differences with markers
 compare_files() {
     local file1="$1"
     local file2="$2"
     local diff_file="$3"
 
     echo "Comparing $file1 and $file2..." >> "$diff_file"
-    diff -u "$file1" "$file2" >> "$diff_file"
+    diff --unchanged-line-format='%L' --old-line-format='<<< %L' --new-line-format='>>> %L' "$file1" "$file2" >> "$diff_file"
     echo "----------------------------------------" >> "$diff_file"
-}
-
-# Function to generate colored diff output in the terminal
-show_colored_diff() {
-    local file1="$1"
-    local file2="$2"
-    colordiff -u "$file1" "$file2"
-}
-
-# Function to generate an HTML file with highlighted differences
-generate_html_diff() {
-    local file1="$1"
-    local file2="$2"
-    local html_file="$3"
-    diff -u "$file1" "$file2" | ansi2html > "$html_file"
 }
 
 # Split the files into individual XML documents and compare
@@ -69,18 +53,6 @@ for part1 in "${TEMP1}_part_"*; do
         else
             echo "Documents $(basename "$part1") differ." >> "$DIFF_FILE"
             compare_files "$part1" "$part2" "$DIFF_FILE"
-            echo "Colored diff for $(basename "$part1"):"
-            show_colored_diff "$part1" "$part2"
-            generate_html_diff "$part1" "$part2" "$HTML_FILE"
         fi
     else
-        echo "Document $(basename "$part1") has no corresponding document in the second file." >> "$DIFF_FILE"
-    fi
-done
-
-# Clean up temporary files
-rm -f "${TEMP1}_part_"* "${TEMP2}_part_"*
-
-echo "Differences written to $DIFF_FILE"
-echo "Colored differences displayed in the terminal."
-echo "HTML file with highlighted differences generated: $HTML_FILE"
+        echo "Document $(basename "$part1") has no corresponding document
