@@ -9,6 +9,7 @@ fi
 FILE1="$1"
 FILE2="$2"
 DIFF_FILE="differences.txt"
+IGNORE_PATTERNS_FILE="ignore_patterns.txt"
 
 # Temporary files to store individual XML documents
 TEMP1=$(mktemp)
@@ -17,6 +18,16 @@ TEMP2=$(mktemp)
 # Function to normalize XML (remove extra spaces, newlines, etc.)
 normalize_xml() {
     xmllint --format - | sed 's/>\s*</></g' | tr -d '\n'
+}
+
+# Function to filter out known differences
+filter_known_differences() {
+    local file="$1"
+    if [ -f "$IGNORE_PATTERNS_FILE" ]; then
+        grep -v -f "$IGNORE_PATTERNS_FILE" "$file"
+    else
+        cat "$file"
+    fi
 }
 
 # Function to compare two files and write differences with line numbers
@@ -29,7 +40,8 @@ compare_files() {
     diff --unchanged-group-format='' \
          --old-group-format='<<< Line %dn in %df: %<' \
          --new-group-format='>>> Line %dN in %df: %>' \
-         "$file1" "$file2" >> "$diff_file"
+         <(filter_known_differences "$file1") \
+         <(filter_known_differences "$file2") >> "$diff_file"
     echo "----------------------------------------" >> "$diff_file"
 }
 
