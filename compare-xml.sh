@@ -19,14 +19,17 @@ normalize_xml() {
     xmllint --format - | sed 's/>\s*</></g' | tr -d '\n'
 }
 
-# Function to compare two files line by line and write differences with markers
+# Function to compare two files and write differences with line numbers
 compare_files() {
     local file1="$1"
     local file2="$2"
     local diff_file="$3"
 
-    echo "Comparing $file1 and $file2..." >> "$diff_file"
-    diff --unchanged-line-format='%L' --old-line-format='<<< %L' --new-line-format='>>> %L' "$file1" "$file2" >> "$diff_file"
+    echo "Differences between $file1 and $file2:" >> "$diff_file"
+    diff --unchanged-group-format='' \
+         --old-group-format='<<< Line %dn in %df: %<' \
+         --new-group-format='>>> Line %dN in %df: %>' \
+         "$file1" "$file2" >> "$diff_file"
     echo "----------------------------------------" >> "$diff_file"
 }
 
@@ -55,4 +58,11 @@ for part1 in "${TEMP1}_part_"*; do
             compare_files "$part1" "$part2" "$DIFF_FILE"
         fi
     else
-        echo "Document $(basename "$part1") has no corresponding document
+        echo "Document $(basename "$part1") has no corresponding document in the second file." >> "$DIFF_FILE"
+    fi
+done
+
+# Clean up temporary files
+rm -f "${TEMP1}_part_"* "${TEMP2}_part_"*
+
+echo "Differences written to $DIFF_FILE"
