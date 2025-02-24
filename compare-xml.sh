@@ -44,24 +44,21 @@ compare_xml_documents() {
     fi
 }
 
-# Function to process XML files in a streaming manner
-process_xml_file() {
+# Function to split XML files into individual documents
+split_xml_file() {
     local file="$1"
     awk '
         BEGIN { doc = ""; count = 0 }
         /<?xml/ {
             if (doc != "") {
-                print doc > "temp_doc_" count
-                close("temp_doc_" count)
-                count++
+                print doc
+                doc = ""
             }
-            doc = $0
         }
-        !/<?xml/ { doc = doc "\n" $0 }
+        { doc = doc $0 "\n" }
         END {
             if (doc != "") {
-                print doc > "temp_doc_" count
-                close("temp_doc_" count)
+                print doc
             }
         }
     ' "$file"
@@ -70,26 +67,24 @@ process_xml_file() {
 # Clear the differences file
 > "$DIFF_FILE"
 
-# Process the first file and store documents in memory
-declare -A file1_docs
-index=0
-while IFS= read -r -d '' doc; do
-    file1_docs["$index"]="$doc"
-    index=$((index + 1))
-done < <(process_xml_file "$FILE1" | tr '\n' '\0')
+# Read documents from the first file into an array
+mapfile -t file1_docs < <(split_xml_file "$FILE1")
 
-# Process the second file and compare documents
+# Read documents from the second file and compare
 index=0
-while IFS= read -r -d '' doc; do
+while IFS= read -r doc2; do
     if [ -n "${file1_docs[$index]}" ]; then
-        compare_xml_documents "${file1_docs[$index]}" "$doc" "$index"
+        compare_xml_documents "${file1_docs[$index]}" "$doc2" "$index"
     else
         echo "Document $index has no corresponding document in the first file." >> "$DIFF_FILE"
     fi
     index=$((index + 1))
-done < <(process_xml_file "$FILE2" | tr '\n' '\0')
+done < <(split_xml_file "$FILE2")
 
-# Clean up temporary files
-rm -f temp_doc_*
+# Handle case where file1 has more documents than file2
+while [ "$index" -lt "${#file1_docs[@]}" ]; do
+    echo "Document $index has no corresponding document in the second file." >> "$DIFF_FILE"
+    index=$((index + 1))
+done
 
 echo "Differences written to $DIFF_FILE"
