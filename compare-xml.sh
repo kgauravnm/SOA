@@ -31,10 +31,8 @@ compare_xml_documents() {
     local doc2="$2"
     local index="$3"
 
-    if diff <(echo "$doc1" | normalize_xml) <(echo "$doc2" | normalize_xml) > /dev/null; then
-        echo "Document $index is identical." >> "$DIFF_FILE"
-    else
-        echo "Document $index differs." >> "$DIFF_FILE"
+    if ! diff <(echo "$doc1" | normalize_xml) <(echo "$doc2" | normalize_xml) > /dev/null; then
+        echo "Document $index differs:" >> "$DIFF_FILE"
         diff --unchanged-group-format='' \
              --old-group-format='<<< Line %dn in Document %df: %<' \
              --new-group-format='>>> Line %dN in Document %df: %>' \
