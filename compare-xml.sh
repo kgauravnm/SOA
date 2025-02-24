@@ -37,4 +37,68 @@ compare_xml_documents() {
              --old-group-format='<<< Line %dn in Document %df: %<' \
              --new-group-format='>>> Line %dN in Document %df: %>' \
              <(echo "$doc1" | filter_known_differences) \
-             <(echo "$doc2" | filter_known_differences) >> "$DI
+             <(echo "$doc2" | filter_known_differences) >> "$DIFF_FILE"
+        echo "----------------------------------------" >> "$DIFF_FILE"
+    fi
+}
+
+# Function to read XML documents one by one
+read_xml_documents() {
+    local file="$1"
+    awk '
+        BEGIN { doc = "" }
+        /<?xml/ {
+            if (doc != "") {
+                print doc
+                doc = ""
+            }
+        }
+        { doc = doc $0 "\n" }
+        END {
+            if (doc != "") {
+                print doc
+            }
+        }
+    ' "$file"
+}
+
+# Clear the differences file
+> "$DIFF_FILE"
+
+# Open file descriptors for reading
+exec 3< <(read_xml_documents "$FILE1")
+exec 4< <(read_xml_documents "$FILE2")
+
+# Compare documents one by one
+index=0
+while true; do
+    # Read documents from both files
+    if ! read -r -u 3 doc1; then
+        doc1=""
+    fi
+    if ! read -r -u 4 doc2; then
+        doc2=""
+    fi
+
+    # Break if both files are exhausted
+    if [ -z "$doc1" ] && [ -z "$doc2" ]; then
+        break
+    fi
+
+    # Compare documents
+    if [ -n "$doc1" ] && [ -n "$doc2" ]; then
+        compare_xml_documents "$doc1" "$doc2" "$index"
+    elif [ -n "$doc1" ]; then
+        echo "Document $index has no corresponding document in the second file." >> "$DIFF_FILE"
+    elif [ -n "$doc2" ]; then
+        echo "Document $index has no corresponding document in the first file." >> "$DIFF_FILE"
+    fi
+
+    index=$((index + 1))
+done
+
+# Close file descriptors
+exec 3<&-
+exec 4<&-
+
+echo "Differences written to $DIFF_FILE"
