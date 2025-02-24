@@ -46,17 +46,20 @@ compare_xml_documents() {
 read_xml_documents() {
     local file="$1"
     awk '
-        BEGIN { doc = "" }
+        BEGIN { doc = ""; in_doc = 0 }
         /<?xml/ {
-            if (doc != "") {
+            if (in_doc) {
                 print doc
                 doc = ""
             }
+            in_doc = 1
         }
-        { doc = doc $0 "\n" }
-        END {
-            if (doc != "") {
+        in_doc { doc = doc $0 "\n" }
+        /<\/[^>]+>/ {
+            if (in_doc) {
                 print doc
+                doc = ""
+                in_doc = 0
             }
         }
     ' "$file"
