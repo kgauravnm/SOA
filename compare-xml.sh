@@ -9,6 +9,7 @@ fi
 FILE1="$1"
 FILE2="$2"
 DIFF_FILE="differences.txt"
+IGNORE_PATTERNS_FILE="ignore_patterns.txt"
 
 # Function to extract individual XML documents
 extract_xml_documents() {
@@ -61,6 +62,15 @@ normalize_xml() {
     fi
 }
 
+# Function to filter known differences
+filter_known_differences() {
+    if [ -s "$IGNORE_PATTERNS_FILE" ]; then
+        grep -v -f "$IGNORE_PATTERNS_FILE"
+    else
+        cat
+    fi
+}
+
 # Prepare directories
 TMP_DIR1="xml_docs_1"
 TMP_DIR2="xml_docs_2"
@@ -105,8 +115,9 @@ while [ $index -lt "$DOC_COUNT1" ] || [ $index -lt "$DOC_COUNT2" ]; do
     normalize_xml "$FILE1_DOC" "${FILE1_DOC}.norm"
     normalize_xml "$FILE2_DOC" "${FILE2_DOC}.norm"
 
-    # Compare
-    diff_output=$(diff -u "${FILE1_DOC}.norm" "${FILE2_DOC}.norm")
+    # Apply ignore patterns
+    diff_output=$(diff -u <(cat "${FILE1_DOC}.norm" | filter_known_differences) <(cat "${FILE2_DOC}.norm" | filter_known_differences))
+
     if [ -n "$diff_output" ]; then
         echo "Differences in document $index:" >> "$DIFF_FILE"
         echo "$diff_output" >> "$DIFF_FILE"
