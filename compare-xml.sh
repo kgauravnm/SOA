@@ -13,7 +13,7 @@ IGNORE_PATTERNS_FILE="ignore_patterns.txt"
 
 # Function to normalize XML efficiently
 normalize_xml() {
-    xmlstarlet fo --omit-decl --nocdata | tr -d '\n' | sed 's/> </></g'
+    xmllint --format - 2>/dev/null | sed 's/>\s*</></g' | tr -d '\n'
 }
 
 # Function to filter known differences
@@ -30,8 +30,8 @@ filter_known_differences() {
 
 # Normalize entire XML files first (avoids repeated processing)
 echo "Normalizing XML files..."
-normalize_xml < "$FILE1" > "${FILE1}.norm"
-normalize_xml < "$FILE2" > "${FILE2}.norm"
+xmllint --format "$FILE1" 2>/dev/null | sed 's/>\s*</></g' | tr -d '\n' > "${FILE1}.norm"
+xmllint --format "$FILE2" 2>/dev/null | sed 's/>\s*</></g' | tr -d '\n' > "${FILE2}.norm"
 
 # Compare normalized files
 echo "Comparing files..."
