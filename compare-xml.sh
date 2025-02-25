@@ -116,15 +116,11 @@ while [ $index -lt "$DOC_COUNT1" ] || [ $index -lt "$DOC_COUNT2" ]; do
     normalize_xml "$FILE2_DOC" "${FILE2_DOC}.norm"
 
     # Extract only the changed values instead of full XML tags
-    diff_output=$(diff --unchanged-group-format='' \
-                       --old-group-format='<<< %L' \
-                       --new-group-format='>>> %L' \
-                       <(cat "${FILE1_DOC}.norm" | filter_known_differences) \
-                       <(cat "${FILE2_DOC}.norm" | filter_known_differences))
+    diff_output=$(diff -u <(cat "${FILE1_DOC}.norm" | filter_known_differences) <(cat "${FILE2_DOC}.norm" | filter_known_differences) | grep -E "^\+|^-" | grep -vE "^\+\+\+" | grep -vE "^---")
 
     if [ -n "$diff_output" ]; then
         echo "Differences in document $index:" >> "$DIFF_FILE"
-        echo "$diff_output" >> "$DIFF_FILE"
+        echo "$diff_output" | awk '{if ($0 ~ /^\+/) print ">>> " substr($0,2); else if ($0 ~ /^-/) print "<<< " substr($0,2);}' >> "$DIFF_FILE"
         echo "----------------------------------------" >> "$DIFF_FILE"
     fi
 
