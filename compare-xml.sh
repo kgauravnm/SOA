@@ -120,7 +120,7 @@ while [ $index -lt "$DOC_COUNT1" ] || [ $index -lt "$DOC_COUNT2" ]; do
 
     if [ -n "$diff_output" ]; then
         echo "Differences in document $index:" >> "$DIFF_FILE"
-        echo "$diff_output" | awk '{if ($0 ~ /^\+/) print ">>> " substr($0,2); else if ($0 ~ /^-/) print "<<< " substr($0,2);}' >> "$DIFF_FILE"
+        echo "$diff_output" | awk '{if ($0 ~ /^\+/) print ">>> " substr($0,2); else if ($0 ~ /^-/) print "<<< " substr($0,2);}' | awk '{print $0 "\n==== Difference Separator ===="}' >> "$DIFF_FILE"
         echo "----------------------------------------" >> "$DIFF_FILE"
     fi
 
