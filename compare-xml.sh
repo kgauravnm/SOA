@@ -13,7 +13,7 @@ IGNORE_PATTERNS_FILE="ignore_patterns.txt"
 
 # Function to normalize XML efficiently
 normalize_xml() {
-    xmllint --format - 2>/dev/null | sed 's/>\s*</></g' | tr -d '\n'
+    xmllint --format "$1" 2>/dev/null | sed 's/>\s*</></g' | tr -d '\n'
 }
 
 # Function to filter known differences
@@ -28,17 +28,27 @@ filter_known_differences() {
 # Clear the differences file
 > "$DIFF_FILE"
 
-# Normalize entire XML files first (avoids repeated processing)
 echo "Normalizing XML files..."
-xmllint --format "$FILE1" 2>/dev/null | sed 's/>\s*</></g' | tr -d '\n' > "${FILE1}.norm"
-xmllint --format "$FILE2" 2>/dev/null | sed 's/>\s*</></g' | tr -d '\n' > "${FILE2}.norm"
+normalize_xml "$FILE1" > "${FILE1}.norm"
+normalize_xml "$FILE2" > "${FILE2}.norm"
 
-# Compare normalized files
+# Check if normalization was successful
+if [ ! -s "${FILE1}.norm" ] || [ ! -s "${FILE2}.norm" ]; then
+    echo "Error: Failed to normalize XML files. Check if the input files are valid XML."
+    exit 1
+fi
+
 echo "Comparing files..."
-diff -u <(filter_known_differences < "${FILE1}.norm") \
-       <(filter_known_differences < "${FILE2}.norm") > "$DIFF_FILE"
+diff_output=$(diff -u <(filter_known_differences < "${FILE1}.norm") \
+                   <(filter_known_differences < "${FILE2}.norm"))
 
-echo "Comparison completed. Differences saved to $DIFF_FILE."
+# Check if any differences were found
+if [ -z "$diff_output" ]; then
+    echo "No differences found."
+else
+    echo "$diff_output" > "$DIFF_FILE"
+    echo "Differences found. Saved to $DIFF_FILE."
+fi
 
 # Cleanup temporary files
 rm -f "${FILE1}.norm" "${FILE2}.norm"
