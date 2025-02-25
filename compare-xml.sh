@@ -42,10 +42,11 @@ compare_xml_documents() {
     fi
 }
 
-# Function to read XML documents one by one
-read_xml_documents() {
+# Function to clean and split XML documents
+clean_and_split_xml() {
     local file="$1"
-    awk '
+    # Remove invalid characters and ensure proper XML formatting
+    sed 's/\x00//g; s/\x1A//g' "$file" | awk '
         BEGIN { doc = ""; in_doc = 0; depth = 0 }
         /<?xml/ {
             if (in_doc) {
@@ -65,15 +66,15 @@ read_xml_documents() {
                 in_doc = 0
             }
         }
-    ' "$file"
+    '
 }
 
 # Clear the differences file
 > "$DIFF_FILE"
 
 # Open file descriptors for reading
-exec 3< <(read_xml_documents "$FILE1")
-exec 4< <(read_xml_documents "$FILE2")
+exec 3< <(clean_and_split_xml "$FILE1")
+exec 4< <(clean_and_split_xml "$FILE2")
 
 # Compare documents one by one
 index=0
