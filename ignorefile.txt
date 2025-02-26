@@ -11,3 +11,5 @@ s/<\/idScheme>//g
 s/(<codingScheme>.*?)[^a-zA-Z0-9 ]+(<\/codingScheme>)/\1\2/g
 s/&#13;//g
 s/(>[^<]*?)[^a-zA-Z0-9 ]+(<)/\1\2/g
+
+private static final Pattern _36B_XX_DESC_PATTERN = Pattern.compile("(/../../\\w+)(x\\n)?(((x\\n)?.)*)=");
