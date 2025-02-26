@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/bin
+#s/<amount>([0-9]+)\.0+<\/amount>/<amount>\1<\/amount>/g
+#s/<financialIndicatorValue>([0-9]+)\.0+<\/financialIndicatorValue>/<financialIndicatorValue>\1<\/financialIndicatorValue>/g
 
 #s/<amount>([0-9]+)\.0+<\/amount>/<amount>\1<\/amount>/g
 
