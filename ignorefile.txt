@@ -13,3 +13,30 @@ s/&#13;//g
 s/(>[^<]*?)[^a-zA-Z0-9 ]+(<)/\1\2/g
 
 private static final Pattern _36B_XX_DESC_PATTERN = Pattern.compile("(/../../\\w+)(x\\n)?(((x\\n)?.)*)=");
+
+
+import java.util.regex.*;
+
+public class Main {
+    private static final Pattern LAST_TWO_LINES_PATTERN = Pattern.compile("(?m)(?:.*\r?\n)?(.*\r?\n.*)$");
+
+    public static String swift_35B_CodingScheme(String identification, String description) {
+        if (identification == null || identification.isEmpty()) {
+            return description;
+        }
+
+        Matcher matcher = LAST_TWO_LINES_PATTERN.matcher(description);
+        
+        if (matcher.find()) {
+            return matcher.group(1); // Capture last two lines
+        } else {
+            return description; // Return as-is if no match
+        }
+    }
+
+    public static void main(String[] args) {
+        String input = "/XS/104093531\n//REPUBBLICA ITALIANA 4.50000 01/03\n/26 EUR";
+        String result = swift_35B_CodingScheme("someID", input);
+        System.out.println(result);
+    }
+}
