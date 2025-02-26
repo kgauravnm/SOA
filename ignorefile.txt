@@ -8,3 +8,4 @@ s/<productName><\/productName>//g
 s/<\/productName>//g
 s/<idScheme><\/idScheme>//g
 s/<\/idScheme>//g
+s/(<codingScheme>.*?)[^a-zA-Z0-9 ]+(<\/codingScheme>)/\1\2/g
