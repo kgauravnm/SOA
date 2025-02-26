@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#s/<amount>([0-9]+)\.0+<\/amount>/<amount>\1<\/amount>/g
+
 # Check if two files are provided
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <file1.xml> <file2.xml>"
