@@ -1,9 +1,4 @@
-#!/bin
-#s/<amount>([0-9]+)\.0+<\/amount>/<amount>\1<\/amount>/g
-#s/<financialIndicatorValue>([0-9]+)\.0+<\/financialIndicatorValue>/<financialIndicatorValue>\1<\/financialIndicatorValue>/g
-
-#s/<amount>([0-9]+)\.0+<\/amount>/<amount>\1<\/amount>/g
-
+#!/bin/bash
 # Check if two files are provided
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <file1.xml> <file2.xml>"
@@ -35,14 +30,13 @@ extract_xml_documents() {
         }
         in_doc {
             doc = doc $0 "\n"
-            if (/<[^/]/) depth++
-            if (/<\/[^>]+>/) depth--
-            if (depth == 0 && in_doc) {
+            if (/<[^\/>]+>/) depth++   # Increase depth for opening tags
+            if (/<\/[^>]+>/) depth--   # Decrease depth for closing tags
+        }
+        END {
+            if (in_doc && doc != "") { # Ensure last document is saved
                 print doc > sprintf("%s/doc_%d.xml", "'$output_dir'", file_count)
                 close(sprintf("%s/doc_%d.xml", "'$output_dir'", file_count))
-                doc = ""
-                in_doc = 0
-                file_count++
             }
         }
     ' "$file"
