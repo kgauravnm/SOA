@@ -21,5 +21,9 @@ s#<id\s*/>##g
 /<amount>-?[0-9]\+\(\.[0-9]*\)\?<\/amount>/d
 /<idScheme>/ {N; N; N; N; s#<idScheme>[^<]*\n([^<]*\n){0,3}[^<]*</idScheme>##g}
 
+# Function to filter known differences, remove empty lines and format numbers
+filter_known_differences() {
+    sed '/^[[:space:]]*$/d' | sed -f "$IGNORE_PATTERNS_FILE"
+}
 
     
