@@ -32,10 +32,13 @@ echo "$diff_output" | awk '
         if ($0 ~ /^\+/) line = ">>> " substr($0,2);
         else if ($0 ~ /^-/) line = "<<< " substr($0,2);
         else next;
-        
+
+        # Trim leading and trailing spaces
+        gsub(/^[ \t]+|[ \t]+$/, "", line);
+
+        # Print only if line is not empty
         if (length(line) > 4) print line;
     } 
     END { print "==== Difference Separator ====" }
 ' >> "$DIFF_FILE"
-
     
