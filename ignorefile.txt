@@ -26,4 +26,16 @@ filter_known_differences() {
     sed '/^[[:space:]]*$/d' | sed -f "$IGNORE_PATTERNS_FILE"
 }
 
+
+echo "$diff_output" | awk '
+    {
+        if ($0 ~ /^\+/) line = ">>> " substr($0,2);
+        else if ($0 ~ /^-/) line = "<<< " substr($0,2);
+        else next;
+        
+        if (length(line) > 4) print line;
+    } 
+    END { print "==== Difference Separator ====" }
+' >> "$DIFF_FILE"
+
     
