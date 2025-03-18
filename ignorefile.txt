@@ -19,7 +19,7 @@ s#<id\s*/>##g
 /^$/d
 /<idScheme>/ {N; N; N; N; s#<idScheme>[^<]*\n([^<]*\n){0,3}[^<]*</idScheme>##g}
 /<amount>-?[0-9]\+\(\.[0-9]*\)\?<\/amount>/d
-
+/<idScheme>/ {N; N; N; N; s#<idScheme>[^<]*\n([^<]*\n){0,3}[^<]*</idScheme>##g}
 
 
     
