@@ -41,4 +41,26 @@ echo "$diff_output" | awk '
     } 
     END { print "==== Difference Separator ====" }
 ' >> "$DIFF_FILE"
+
+
+echo "$diff_output" | awk '
+    BEGIN { has_diff = 0 }
+    {
+        if ($0 ~ /^\+/) line = ">>> " substr($0,2);
+        else if ($0 ~ /^-/) line = "<<< " substr($0,2);
+        else next;
+
+        # Trim leading and trailing spaces
+        gsub(/^[ \t]+|[ \t]+$/, "", line);
+
+        # Print only if line is not empty
+        if (length(line) > 4) {
+            print line;
+            has_diff = 1;
+        }
+    } 
+    END {
+        if (has_diff) print "==== Difference Separator ====";
+    }
+' >> "$DIFF_FILE"
     
