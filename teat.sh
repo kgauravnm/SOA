@@ -16,31 +16,31 @@ fi
 # Last day of previous month
 LAST_DAY_PREV_MONTH=$(date -d "$(date +%Y-%m-01) -1 day" +%Y%m%d)
 
-while IFS='|' read -r process_name file_pattern file_ext input_path frequency file_type expected_time; do
-    [[ "$process_name" =~ ^#.*$ || -z "$process_name" ]] && continue
+while IFS='|' read -r process_name file_pattern file_ext date_logic input_path frequency file_type expected_time; do
+    # Skip blank lines or comment lines
+    if [[ "$process_name" == \#* ]] || [[ -z "$process_name" ]]; then
+        continue
+    fi
 
-    # Sanitize frequency: remove CR, trim spaces, and lowercase
-    frequency=$(echo "$frequency" | tr -d '
-' | tr '[:upper:]' '[:lower:]' | xargs)
+    date_logic=$(echo "$date_logic" | tr -d '\r' | tr '[:upper:]' '[:lower:]' | xargs)
 
-    # Determine expected date string based on frequency
-    case "$frequency" in
-        d)
+    case "$date_logic" in
+        same_day)
             DATE_STR=$TODAY
             ;;
-        d1)
+        previous_day)
             DATE_STR=$YESTERDAY
             ;;
-        dm1)
+        last_day_prev_month)
             DAY_OF_MONTH=$(date +%d)
             if [ "$DAY_OF_MONTH" -gt 3 ]; then
-                echo "[$(date)] â­ï¸ Skipping [$process_name]: dm1 check only valid from 1st to 3rd" >> "$ALERT_LOG"
+                echo "[$(date)] â­ï¸ Skipping [$process_name]: last_day_prev_month only checked between 1stâ3rd" >> "$ALERT_LOG"
                 continue
             fi
             DATE_STR=$LAST_DAY_PREV_MONTH
             ;;
         *)
-            echo "[$(date)] â ï¸ Unknown frequency [$frequency] for process [$process_name]" >> "$ALERT_LOG"
+            echo "[$(date)] â ï¸ Unknown date_logic [$date_logic] for process [$process_name]" >> "$ALERT_LOG"
             continue
             ;;
     esac
