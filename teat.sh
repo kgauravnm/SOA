@@ -2,7 +2,7 @@
 
 CONFIG_FILE="file_check_config.txt"
 ALERT_LOG="./file_monitor.log"
-EMAIL_RECIPIENTS="your_email@example.com"  # 🔁 Replace with real email
+EMAIL_RECIPIENTS="your_email@example.com"  # Replace this with your actual email
 CURRENT_TIME=$(date +%H:%M)
 TODAY=$(date +%Y%m%d)
 
@@ -18,7 +18,13 @@ fi
 LAST_DAY_PREV_MONTH=$(date -d "$(date +%Y-%m-01) -1 day" +%Y%m%d)
 
 while IFS=',' read -r process_name file_pattern file_ext date_logic input_path frequency file_type expected_time; do
-    [[ "$process_name" =~ ^#.*$ || -z "$process_name" ]] && continue
+    # Safely skip comment or empty lines
+    if [[ "$process_name" == \#* ]] || [[ -z "$process_name" ]]; then
+        continue
+    fi
+
+    # Debug print
+    echo "DEBUG → $process_name | $file_pattern | $file_ext | $date_logic | $input_path | $frequency | $file_type | $expected_time"
 
     # Handle monthly frequency
     if [ "$frequency" = "monthly" ]; then
