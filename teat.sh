@@ -18,15 +18,21 @@ fi
 LAST_DAY_PREV_MONTH=$(date -d "$(date +%Y-%m-01) -1 day" +%Y%m%d)
 
 while IFS=',' read -r process_name file_pattern file_ext date_logic input_path frequency file_type expected_time; do
-    # Safely skip comment or empty lines
+    # Clean up \r and whitespace
+    process_name=$(echo "$process_name" | tr -d '\r' | xargs)
+    file_pattern=$(echo "$file_pattern" | tr -d '\r' | xargs)
+    file_ext=$(echo "$file_ext" | tr -d '\r' | xargs)
+    date_logic=$(echo "$date_logic" | tr -d '\r' | xargs)
+    input_path=$(echo "$input_path" | tr -d '\r' | xargs)
+    frequency=$(echo "$frequency" | tr -d '\r' | xargs)
+    file_type=$(echo "$file_type" | tr -d '\r' | xargs)
+    expected_time=$(echo "$expected_time" | tr -d '\r' | xargs)
+
     if [[ "$process_name" == \#* ]] || [[ -z "$process_name" ]]; then
         continue
     fi
 
-    # Debug print
-    echo "DEBUG → $process_name | $file_pattern | $file_ext | $date_logic | $input_path | $frequency | $file_type | $expected_time"
-
-    # Handle monthly frequency
+    # Date logic
     if [ "$frequency" = "monthly" ]; then
         DAY_OF_MONTH=$(date +%d)
         if [ "$DAY_OF_MONTH" -gt 3 ]; then
