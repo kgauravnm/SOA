@@ -2,7 +2,7 @@
 
 CONFIG_FILE="file_check_config.txt"
 ALERT_LOG="./file_monitor.log"
-EMAIL_RECIPIENTS="your_email@example.com"  # Replace this with your actual email
+EMAIL_RECIPIENTS="your_email@example.com"  # Replace with your actual email
 CURRENT_TIME=$(date +%H:%M)
 TODAY=$(date +%Y%m%d)
 
@@ -19,12 +19,41 @@ LAST_DAY_PREV_MONTH=$(date -d "$(date +%Y-%m-01) -1 day" +%Y%m%d)
 
 # HTML email setup
 html_head='<html><head><style>
-body {font-family:Arial;background:#fafafa;color:#333;}
-table {border-collapse:collapse;width:100%;font-size:14px;}
-th,td {border:1px solid #ccc;padding:8px;text-align:left;}
-th {background:#4CAF50;color:white;}
-tr:nth-child(even){background:#f2f2f2;}
-td.status-nok {background:#f44336;color:white;text-align:center;}
+body {
+  font-family: Arial, sans-serif;
+  background: #fafafa;
+  color: #333;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+th {
+  background: #d2b48c;
+  color: white;
+}
+tr:nth-child(even) {
+  background: #f2f2f2;
+}
+td.status-nok {
+  background: #f44336;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: 0 0 8px #f44336;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%   { box-shadow: 0 0 5px #f44336; }
+  50%  { box-shadow: 0 0 15px #f44336; }
+  100% { box-shadow: 0 0 5px #f44336; }
+}
 </style></head><body>'
 html_title="<h3>🚨 File Monitoring Alert Report – $(date)</h3>"
 html_table="<table><tr><th>Process Name</th><th>Expected File</th><th>File Path</th><th>Expected Time</th><th>Status</th></tr>"
@@ -104,44 +133,3 @@ if $alert_found; then
 else
     echo "[$(date)] ✅ No alerts to send. All files OK or not yet time." | tee -a "$ALERT_LOG"
 fi
-
-
-
-
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background: #fafafa;
-  color: #333;
-}
-table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 14px;
-}
-th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: left;
-}
-th {
-  background: #d2b48c;
-  color: white;
-}
-tr:nth-child(even) {
-  background: #f2f2f2;
-}
-td.status-nok {
-  background: #f44336;
-  color: white;
-  text-align: center;
-  font-weight: bold;
-  box-shadow: 0 0 8px #f44336;
-  animation: pulse 2s infinite;
-}
-@keyframes pulse {
-  0%   { box-shadow: 0 0 5px #f44336; }
-  50%  { box-shadow: 0 0 15px #f44336; }
-  100% { box-shadow: 0 0 5px #f44336; }
-}
-</style>
