@@ -104,3 +104,44 @@ if $alert_found; then
 else
     echo "[$(date)] ✅ No alerts to send. All files OK or not yet time." | tee -a "$ALERT_LOG"
 fi
+
+
+
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #fafafa;
+  color: #333;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+th {
+  background: #d2b48c;
+  color: white;
+}
+tr:nth-child(even) {
+  background: #f2f2f2;
+}
+td.status-nok {
+  background: #f44336;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: 0 0 8px #f44336;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%   { box-shadow: 0 0 5px #f44336; }
+  50%  { box-shadow: 0 0 15px #f44336; }
+  100% { box-shadow: 0 0 5px #f44336; }
+}
+</style>
