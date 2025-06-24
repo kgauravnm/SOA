@@ -17,7 +17,7 @@ fi
 # Last day of previous month
 LAST_DAY_PREV_MONTH=$(date -d "$(date +%Y-%m-01) -1 day" +%Y%m%d)
 
-# HTML email setup
+# HTML email header
 html_head='<html><head><style>
 body {
   font-family: Arial, sans-serif;
@@ -55,6 +55,7 @@ td.status-nok {
   100% { box-shadow: 0 0 5px #f44336; }
 }
 </style></head><body>'
+
 html_title="<h3>🚨 File Monitoring Alert Report – $(date)</h3>"
 html_table="<table><tr><th>Process Name</th><th>Expected File</th><th>File Path</th><th>Expected Time</th><th>Status</th></tr>"
 alert_found=false
@@ -78,7 +79,7 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
         continue
     fi
 
-    # Handle date logic
+    # Determine date logic
     if [ "$freq_lower" = "monthly" ]; then
         DAY_OF_MONTH=$(date +%d)
         if [ "$DAY_OF_MONTH" -gt 3 ]; then
@@ -96,16 +97,19 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
     FILE_PATH="$input_path/$EXPECTED_FILE"
 
     if [[ "$CURRENT_TIME" > "$expected_time" ]]; then
+        # Escape HTML special characters
+        safe_path=$(echo "$FILE_PATH" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+
         if [ ! -f "$FILE_PATH" ]; then
             MSG="[$(date)] ❌ ALERT: File not found for [$process_name] → Expected: $FILE_PATH before $expected_time"
             echo "$MSG" | tee -a "$ALERT_LOG"
-            html_table+="<tr><td>$process_name</td><td>$EXPECTED_FILE</td><td>$FILE_PATH</td><td>$expected_time</td><td class='status-nok'>NOK – Missing</td></tr>"
+            html_table+="<tr><td>$process_name</td><td>$EXPECTED_FILE</td><td>$safe_path</td><td>$expected_time</td><td class='status-nok'>NOK – Missing</td></tr>"
             alert_found=true
         elif [ ! -s "$FILE_PATH" ]; then
             if [[ "$file_ext" != ".tok" ]]; then
                 MSG="[$(date)] ⚠️ ALERT: File [$FILE_PATH] is empty (0 bytes)"
                 echo "$MSG" | tee -a "$ALERT_LOG"
-                html_table+="<tr><td>$process_name</td><td>$EXPECTED_FILE</td><td>$FILE_PATH</td><td>$expected_time</td><td class='status-nok'>NOK – Empty</td></tr>"
+                html_table+="<tr><td>$process_name</td><td>$EXPECTED_FILE</td><td>$safe_path</td><td>$expected_time</td><td class='status-nok'>NOK – Empty</td></tr>"
                 alert_found=true
             else
                 echo "[$(date)] ✅ Note: Empty .tok file [$FILE_PATH] is expected. Skipping empty check." | tee -a "$ALERT_LOG"
@@ -118,7 +122,7 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
     fi
 done < "$CONFIG_FILE"
 
-# Send HTML alert email if needed
+# Send email if any alerts
 if $alert_found; then
     html_full="$html_head$html_title$html_table</table></body></html>"
     (
