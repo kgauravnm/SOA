@@ -19,8 +19,9 @@ LAST_DAY_PREV_MONTH=$(date -d "$(date +%Y-%m-01) -1 day" +%Y%m%d)
 while IFS='|' read -r process_name file_pattern file_ext input_path frequency file_type expected_time; do
     [[ "$process_name" =~ ^#.*$ || -z "$process_name" ]] && continue
 
-    # Convert frequency to lowercase
-    frequency=$(echo "$frequency" | tr '[:upper:]' '[:lower:]')
+    # Sanitize frequency: remove CR, trim spaces, and lowercase
+    frequency=$(echo "$frequency" | tr -d '
+' | tr '[:upper:]' '[:lower:]' | xargs)
 
     # Determine expected date string based on frequency
     case "$frequency" in
@@ -33,13 +34,13 @@ while IFS='|' read -r process_name file_pattern file_ext input_path frequency fi
         dm1)
             DAY_OF_MONTH=$(date +%d)
             if [ "$DAY_OF_MONTH" -gt 3 ]; then
-                echo "[$(date)] ⏭️ Skipping [$process_name]: dm1 check only valid from 1st to 3rd" >> "$ALERT_LOG"
+                echo "[$(date)] â­ï¸ Skipping [$process_name]: dm1 check only valid from 1st to 3rd" >> "$ALERT_LOG"
                 continue
             fi
             DATE_STR=$LAST_DAY_PREV_MONTH
             ;;
         *)
-            echo "[$(date)] ⚠️ Unknown frequency [$frequency] for process [$process_name]" >> "$ALERT_LOG"
+            echo "[$(date)] â ï¸ Unknown frequency [$frequency] for process [$process_name]" >> "$ALERT_LOG"
             continue
             ;;
     esac
@@ -49,14 +50,14 @@ while IFS='|' read -r process_name file_pattern file_ext input_path frequency fi
 
     if [[ "$CURRENT_TIME" > "$expected_time" ]]; then
         if [ ! -f "$FILE_PATH" ]; then
-            echo "[$(date)] ❌ ALERT: File not found for [$process_name] → Expected: $FILE_PATH before $expected_time" >> "$ALERT_LOG"
+            echo "[$(date)] â ALERT: File not found for [$process_name] â Expected: $FILE_PATH before $expected_time" >> "$ALERT_LOG"
         elif [ ! -s "$FILE_PATH" ]; then
-            echo "[$(date)] ⚠️ ALERT: File [$FILE_PATH] is empty (0 bytes)" >> "$ALERT_LOG"
+            echo "[$(date)] â ï¸ ALERT: File [$FILE_PATH] is empty (0 bytes)" >> "$ALERT_LOG"
         else
-            echo "[$(date)] ✅ OK: File exists and is not empty for [$process_name] → $FILE_PATH"
+            echo "[$(date)] â OK: File exists and is not empty for [$process_name] â $FILE_PATH"
         fi
     else
-        echo "[$(date)] ⏳ Waiting: Not yet time to check [$process_name] (Now: $CURRENT_TIME, Expected: $expected_time)"
+        echo "[$(date)] â³ Waiting: Not yet time to check [$process_name] (Now: $CURRENT_TIME, Expected: $expected_time)"
     fi
 
 done < "$CONFIG_FILE"
