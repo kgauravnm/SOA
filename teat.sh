@@ -49,3 +49,27 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
     fi
 
 done < "$CONFIG_FILE"
+
+
+
+case "$frequency" in
+    d)
+        DATE_STR=$TODAY
+        ;;
+    d1)
+        DATE_STR=$YESTERDAY
+        ;;
+    dm1)
+        DAY_OF_MONTH=$(date +%d)
+        if [ "$DAY_OF_MONTH" -gt 3 ]; then
+            echo "[$(date)] ⏭️ Skipping [$process_name]: dm1 check only valid from 1st to 3rd"
+            continue
+        fi
+        DATE_STR=$LAST_DAY_PREV_MONTH
+        ;;
+    *)
+        echo "[$(date)] ⚠️ Unknown frequency [$frequency] for process [$process_name]"
+        continue
+        ;;
+esac
+
