@@ -28,12 +28,16 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
     file_type=$(echo "$file_type" | tr -d '\r' | xargs)
     expected_time=$(echo "$expected_time" | tr -d '\r' | xargs)
 
+    # Convert frequency to lowercase
+    freq_lower=$(echo "$frequency" | tr '[:upper:]' '[:lower:]')
+
+    # Skip commented or empty lines
     if [[ "$process_name" == \#* ]] || [[ -z "$process_name" ]]; then
         continue
     fi
 
     # Handle date logic
-    if [ "$frequency" = "monthly" ]; then
+    if [ "$freq_lower" = "monthly" ]; then
         DAY_OF_MONTH=$(date +%d)
         if [ "$DAY_OF_MONTH" -gt 3 ]; then
             echo "[$(date)] ⏭️ Skipping monthly check for [$process_name], outside 1st–3rd window."
