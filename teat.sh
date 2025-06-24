@@ -53,7 +53,7 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
     if [ "$freq_lower" = "monthly" ]; then
         DAY_OF_MONTH=$(date +%d)
         if [ "$DAY_OF_MONTH" -gt 3 ]; then
-            echo "[$(date)] ⏭️ Skipping monthly check for [$process_name], outside 1st–3rd window."
+            echo "[$(date)] ⏭️ Skipping monthly check for [$process_name], outside 1st–3rd window." | tee -a "$ALERT_LOG"
             continue
         fi
         DATE_STR=$LAST_DAY_PREV_MONTH
@@ -79,20 +79,27 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
                 html_table+="<tr><td>$process_name</td><td>$EXPECTED_FILE</td><td>$FILE_PATH</td><td>$expected_time</td><td class='status-nok'>NOK – Empty</td></tr>"
                 alert_found=true
             else
-                echo "[$(date)] ✅ Note: Empty .tok file [$FILE_PATH] is expected. Skipping empty check."
+                echo "[$(date)] ✅ Note: Empty .tok file [$FILE_PATH] is expected. Skipping empty check." | tee -a "$ALERT_LOG"
             fi
         else
-            echo "[$(date)] ✅ OK: File exists and is not empty for [$process_name] → $FILE_PATH"
+            echo "[$(date)] ✅ OK: File exists and is not empty for [$process_name] → $FILE_PATH" | tee -a "$ALERT_LOG"
         fi
     else
-        echo "[$(date)] ⏳ Waiting: Not yet time to check [$process_name] (Now: $CURRENT_TIME, Expected: $expected_time)"
+        echo "[$(date)] ⏳ Waiting: Not yet time to check [$process_name] (Now: $CURRENT_TIME, Expected: $expected_time)" | tee -a "$ALERT_LOG"
     fi
 done < "$CONFIG_FILE"
 
-# Send one HTML alert email if any NOK was found
+# Send HTML alert email if needed
 if $alert_found; then
     html_full="$html_head$html_title$html_table</table></body></html>"
-    echo "$html_full" | mail -a "Content-Type: text/html" -s "🚨 File Monitoring Alert Summary" "$EMAIL_RECIPIENTS"
+    (
+    echo "To: $EMAIL_RECIPIENTS"
+    echo "Subject: 🚨 File Monitoring Alert Summary"
+    echo "MIME-Version: 1.0"
+    echo "Content-Type: text/html"
+    echo ""
+    echo "$html_full"
+    ) | sendmail -t
     echo "[$(date)] 📧 HTML alert sent to $EMAIL_RECIPIENTS" | tee -a "$ALERT_LOG"
 else
     echo "[$(date)] ✅ No alerts to send. All files OK or not yet time." | tee -a "$ALERT_LOG"
