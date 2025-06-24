@@ -17,7 +17,7 @@ fi
 # Last day of previous month
 LAST_DAY_PREV_MONTH=$(date -d "$(date +%Y-%m-01) -1 day" +%Y%m%d)
 
-# HTML email header
+# HTML email setup
 html_head='<html><head><style>
 body {
   font-family: Arial, sans-serif;
@@ -55,12 +55,11 @@ td.status-nok {
   100% { box-shadow: 0 0 5px #f44336; }
 }
 </style></head><body>'
-
 html_title="<h3>🚨 File Monitoring Alert Report – $(date)</h3>"
 html_table="<table><tr><th>Process Name</th><th>Expected File</th><th>File Path</th><th>Expected Time</th><th>Status</th></tr>"
 alert_found=false
 
-while IFS=',' read -r process_name file_pattern file_ext date_logic input_path frequency file_type expected_time; do
+while IFS=',' read -r process_name file_pattern file_ext date_logic input_path frequency file_type expected_time date_to_check; do
     # Clean up \r and whitespace
     process_name=$(echo "$process_name" | tr -d '\r' | xargs)
     file_pattern=$(echo "$file_pattern" | tr -d '\r' | xargs)
@@ -70,6 +69,7 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
     frequency=$(echo "$frequency" | tr -d '\r' | xargs)
     file_type=$(echo "$file_type" | tr -d '\r' | xargs)
     expected_time=$(echo "$expected_time" | tr -d '\r' | xargs)
+    date_to_check=$(echo "$date_to_check" | tr -d '\r' | xargs)
 
     # Convert frequency to lowercase
     freq_lower=$(echo "$frequency" | tr '[:upper:]' '[:lower:]')
@@ -79,13 +79,24 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
         continue
     fi
 
-    # Determine date logic
+    # Handle date logic
     if [ "$freq_lower" = "monthly" ]; then
-        DAY_OF_MONTH=$(date +%d)
-        if [ "$DAY_OF_MONTH" -gt 3 ]; then
-            echo "[$(date)] ⏭️ Skipping monthly check for [$process_name], outside 1st–3rd window." | tee -a "$ALERT_LOG"
-            continue
-        fi
+        # Build working days (excluding Sat/Sun) from 1st of month
+        working_days=()
+        for i in {0..6}; do
+            d=$(date -d "$(date +%Y-%m-01) +$i days" +%Y-%m-%d)
+            dow=$(date -d "$d" +%u)
+            [ "$dow" -lt 6 ] && working_days+=("$d")
+        done
+
+        today=$(date +%Y-%m-%d)
+        case "$date_to_check" in
+            M1) [ "$today" != "${working_days[0]}" ] && echo "[$(date)] ⏭️ Skipping [$process_name] – not M1 working day" | tee -a "$ALERT_LOG" && continue ;;
+            M2) [ "$today" != "${working_days[1]}" ] && echo "[$(date)] ⏭️ Skipping [$process_name] – not M2 working day" | tee -a "$ALERT_LOG" && continue ;;
+            M3) [ "$today" != "${working_days[2]}" ] && echo "[$(date)] ⏭️ Skipping [$process_name] – not M3 working day" | tee -a "$ALERT_LOG" && continue ;;
+            *) echo "[$(date)] ⚠️ Invalid or missing date_to_check [$date_to_check] for [$process_name]" | tee -a "$ALERT_LOG" && continue ;;
+        esac
+
         DATE_STR=$LAST_DAY_PREV_MONTH
     elif [ "$date_logic" = "same_day" ]; then
         DATE_STR=$TODAY
@@ -95,11 +106,9 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
 
     EXPECTED_FILE="${file_pattern}${DATE_STR}${file_ext}"
     FILE_PATH="$input_path/$EXPECTED_FILE"
+    safe_path=$(echo "$FILE_PATH" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
 
     if [[ "$CURRENT_TIME" > "$expected_time" ]]; then
-        # Escape HTML special characters
-        safe_path=$(echo "$FILE_PATH" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-
         if [ ! -f "$FILE_PATH" ]; then
             MSG="[$(date)] ❌ ALERT: File not found for [$process_name] → Expected: $FILE_PATH before $expected_time"
             echo "$MSG" | tee -a "$ALERT_LOG"
@@ -122,7 +131,7 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
     fi
 done < "$CONFIG_FILE"
 
-# Send email if any alerts
+# Send HTML email alert if any issue
 if $alert_found; then
     html_full="$html_head$html_title$html_table</table></body></html>"
     (
