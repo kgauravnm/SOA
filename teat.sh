@@ -2,14 +2,14 @@
 
 CONFIG_FILE="file_check_config.txt"
 ALERT_LOG="./file_monitor.log"
-EMAIL_RECIPIENTS="your_email@example.com"  # Replace this with your actual email
+EMAIL_RECIPIENTS="your_email@example.com"   # ← change to one or more addresses
 CURRENT_TIME=$(date +%H:%M)
 TODAY=$(date +%Y%m%d)
 
-# Handle Monday: use Friday as "yesterday"
+# Work out logical “yesterday”
 dow=$(date +%u)
 if [ "$dow" -eq 1 ]; then
-    YESTERDAY=$(date -d "3 days ago" +%Y%m%d)
+    YESTERDAY=$(date -d "3 days ago" +%Y%m%d)   # Monday ⇒ Friday
 else
     YESTERDAY=$(date -d "yesterday" +%Y%m%d)
 fi
@@ -17,34 +17,35 @@ fi
 # Last day of previous month
 LAST_DAY_PREV_MONTH=$(date -d "$(date +%Y-%m-01) -1 day" +%Y%m%d)
 
-while IFS=',' read -r process_name file_pattern file_ext date_logic input_path frequency file_type expected_time; do
-    # Clean up \r and whitespace
-    process_name=$(echo "$process_name" | tr -d '\r' | xargs)
-    file_pattern=$(echo "$file_pattern" | tr -d '\r' | xargs)
-    file_ext=$(echo "$file_ext" | tr -d '\r' | xargs)
-    date_logic=$(echo "$date_logic" | tr -d '\r' | xargs)
-    input_path=$(echo "$input_path" | tr -d '\r' | xargs)
-    frequency=$(echo "$frequency" | tr -d '\r' | xargs)
-    file_type=$(echo "$file_type" | tr -d '\r' | xargs)
-    expected_time=$(echo "$expected_time" | tr -d '\r' | xargs)
+############ 1) — start HTML report ############
+html_head='<html><head><style>
+body   {font-family:Arial,Helvetica,sans-serif;background:#fafafa;color:#333;}
+h2     {color:#d32f2f;margin-bottom:6px;}
+table  {border-collapse:collapse;width:100%;margin-top:10px;font-size:14px;}
+th,td  {border:1px solid #ddd;padding:8px;text-align:left;}
+th     {background:#4caf50;color:#fff;}
+tr:nth-child(even){background:#f5f5f5;}
+td.status-nok{background:#f44336;color:#fff;font-weight:bold;text-align:center;}
+</style></head><body>'
+html_title="<h2>🚨 File Monitoring Alert Report</h2><p>Generated at $(date '+%Y-%m-%d %H:%M')</p>"
+html_table="<table><tr><th>Process Name</th><th>Expected File</th><th>File Path</th><th>Expected Time</th><th>Status</th></tr>"
+alert_found=false
+################################################
 
-    # Convert frequency to lowercase
+while IFS=',' read -r process_name file_pattern file_ext date_logic input_path frequency file_type expected_time; do
+    # Strip CR + spaces
+    for v in process_name file_pattern file_ext date_logic input_path frequency file_type expected_time; do
+        declare "$v"="$(echo "${!v}" | tr -d '\r' | xargs)"
+    done
+
+    [[ "$process_name" == \#* || -z "$process_name" ]] && continue
     freq_lower=$(echo "$frequency" | tr '[:upper:]' '[:lower:]')
 
-    # Skip commented or empty lines
-    if [[ "$process_name" == \#* ]] || [[ -z "$process_name" ]]; then
-        continue
-    fi
-
-    # Handle date logic
-    if [ "$freq_lower" = "monthly" ]; then
-        DAY_OF_MONTH=$(date +%d)
-        if [ "$DAY_OF_MONTH" -gt 3 ]; then
-            echo "[$(date)] ⏭️ Skipping monthly check for [$process_name], outside 1st–3rd window."
-            continue
-        fi
+    # Decide expected date
+    if [[ $freq_lower == "monthly" ]]; then
+        [[ $(date +%d) -gt 3 ]] && continue               # skip after 3rd
         DATE_STR=$LAST_DAY_PREV_MONTH
-    elif [ "$date_logic" = "same_day" ]; then
+    elif [[ $date_logic == "same_day" ]]; then
         DATE_STR=$TODAY
     else
         DATE_STR=$YESTERDAY
@@ -54,23 +55,25 @@ while IFS=',' read -r process_name file_pattern file_ext date_logic input_path f
     FILE_PATH="$input_path/$EXPECTED_FILE"
 
     if [[ "$CURRENT_TIME" > "$expected_time" ]]; then
-        if [ ! -f "$FILE_PATH" ]; then
-            MSG="[$(date)] ❌ ALERT: File not found for [$process_name] → Expected: $FILE_PATH before $expected_time"
+        if [[ ! -f "$FILE_PATH" ]]; then
+            MSG="[$(date)] ❌ Missing: $FILE_PATH"
             echo "$MSG" | tee -a "$ALERT_LOG"
-            echo "$MSG" | mail -s "Missing File Alert: $process_name" "$EMAIL_RECIPIENTS"
-        elif [ ! -s "$FILE_PATH" ]; then
-            if [[ "$file_ext" != ".tok" ]]; then
-                MSG="[$(date)] ⚠️ ALERT: File [$FILE_PATH] is empty (0 bytes)"
-                echo "$MSG" | tee -a "$ALERT_LOG"
-                echo "$MSG" | mail -s "Empty File Alert: $process_name" "$EMAIL_RECIPIENTS"
-            else
-                echo "[$(date)] ✅ Note: Empty .tok file [$FILE_PATH] is expected. Skipping empty check."
-            fi
-        else
-            echo "[$(date)] ✅ OK: File exists and is not empty for [$process_name] → $FILE_PATH"
+            html_table+="<tr><td>$process_name</td><td>$EXPECTED_FILE</td><td>$FILE_PATH</td><td>$expected_time</td><td class='status-nok'>NOK – Missing</td></tr>"
+            alert_found=true
+        elif [[ ! -s "$FILE_PATH" && "$file_ext" != ".tok" ]]; then
+            MSG="[$(date)] ⚠️ Empty: $FILE_PATH"
+            echo "$MSG" | tee -a "$ALERT_LOG"
+            html_table+="<tr><td>$process_name</td><td>$EXPECTED_FILE</td><td>$FILE_PATH</td><td>$expected_time</td><td class='status-nok'>NOK – Empty</td></tr>"
+            alert_found=true
         fi
-    else
-        echo "[$(date)] ⏳ Waiting: Not yet time to check [$process_name] (Now: $CURRENT_TIME, Expected: $expected_time)"
     fi
-
 done < "$CONFIG_FILE"
+
+############ 2) — send email if any NOK ############
+if $alert_found; then
+    html_body="$html_head$html_title$html_table</table></body></html>"
+    echo "$html_body" | mail -a "Content-Type: text/html" \
+                        -s "🚨 File Monitoring Alert Report (NOK)" \
+                        "$EMAIL_RECIPIENTS"
+fi
+####################################################
