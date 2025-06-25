@@ -146,3 +146,9 @@ if $alert_found; then
 else
     echo "[$(date)] ✅ No alerts to send. All files OK or not yet time." | tee -a "$ALERT_LOG"
 fi
+
+
+
+
+
+expected_time=$(printf "%04d" "$expected_time")  # pad if needed
