@@ -1,18 +1,6 @@
 
-
-expected_time=$(echo "$expected_time" | sed 's/[^0-9]//g')
-
-CURRENT_TIME=$(date +%H%M)
-expected_time=$(echo "$expected_time" | sed 's/[^0-9]//g')
-
-if [ "$CURRENT_TIME" -gt "$expected_time" ]; then
-    # your check logic
-
-
-
-
-
-
+CURRENT_TIME=$(date +%H%M | sed 's/^0*//')  # 0930 → 930
+expected_time=$(echo "$expected_time" | sed 's/[^0-9]//g' | sed 's/^0*//')  # 0940 → 940
 
 
 
