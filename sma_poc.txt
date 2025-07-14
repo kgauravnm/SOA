@@ -1,0 +1,24 @@
+from selenium import webdriver
+from selenium.webdriver.edge.service import Service
+from selenium.webdriver.edge.options import Options
+import time
+
+# Path to msedgedriver.exe
+driver_path = r"C:\Automation\driver\msedgedriver.exe"
+
+# Edge browser options
+options = Options()
+options.add_argument("--start-maximized")  # optional
+
+# Start Edge browser using Selenium
+service = Service(driver_path)
+driver = webdriver.Edge(service=service, options=options)
+
+# Open any site (Google for now)
+driver.get("https://www.google.com")
+
+# Keep browser open for 10 seconds
+time.sleep(10)
+
+# Close browser
+driver.quit()
