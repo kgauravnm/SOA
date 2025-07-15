@@ -129,3 +129,11 @@ if $alert_found; then
 else
     echo "[$(date)] ✅ No alerts. All good." | tee -a "$ALERT_LOG"
 fi
+
+
+elif [ "$date_logic" = "same_day" ] && { [ "$(date +%u)" -eq 6 ] || [ "$(date +%u)" -eq 7 ]; }; then
+    echo "[$(date)] ⏭️ Skipping same_day check on weekend for [$process_name]" | tee -a "$ALERT_LOG"
+    continue
+elif [ "$date_logic" = "same_day" ]; then
+    DATE_STR=$TODAY
+
