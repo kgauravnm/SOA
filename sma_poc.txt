@@ -1,26 +1,52 @@
+from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.edge.service import Service
+from selenium.webdriver.edge.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import time
 
-# Loop through each row
-for i, row in enumerate(rows[:3]):
-    print(f"\n🔄 Processing row {i + 1}")
+# 🔧 Setup Edge driver options
+options = Options()
+options.add_experimental_option("detach", True)
 
-    # Scroll row into view
-    driver.execute_script("arguments[0].scrollIntoView(true);", row)
-    time.sleep(1)  # Small pause for rendering
+# 🔍 Path to your msedgedriver.exe
+driver_path = "C:\\Path\\To\\Your\\msedgedriver.exe"  # 🔁 Replace this path
+service = Service(driver_path)
 
-    try:
-        # Wait until at least 1 cell is available inside the row
-        cell = WebDriverWait(row, 5).until(
-            lambda r: r.find_element(By.XPATH, ".//div[@role='gridcell']")
-        )
-        print(f"✅ Found cell: {cell.text}")
+# 🚀 Start Edge browser
+driver = webdriver.Edge(service=service, options=options)
+driver.get("https://your-portal-url.com")  # 🔁 Replace with your portal URL
 
-        # Optional: Click the first cell (this usually opens the row)
-        cell.click()
-        print("🖱️ Clicked first cell.")
-        time.sleep(3)
+print("🔐 Please complete SSO login... waiting 30 seconds")
+time.sleep(30)
 
-    except Exception as e:
-        print(f"⚠️ No gridcell found to click in row {i + 1}: {e}")
+try:
+    # Wait for rows to load
+    rows = WebDriverWait(driver, 20).until(
+        EC.presence_of_all_elements_located((By.XPATH, "//div[@role='row' and contains(@class,'ag-row')]"))
+    )
+    print(f"✅ Found {len(rows)} AG-Grid rows")
+
+    for i, row in enumerate(rows[:3]):
+        print(f"\n▶️ Processing row {i + 1}")
+        driver.execute_script("arguments[0].scrollIntoView(true);", row)
+        time.sleep(1)
+
+        try:
+            cell = WebDriverWait(row, 5).until(
+                lambda r: r.find_element(By.XPATH, ".//div[@role='gridcell']")
+            )
+            print(f"📄 Row {i+1} cell text: {cell.text}")
+            cell.click()
+            print("🖱️ Clicked successfully")
+            time.sleep(3)
+
+        except Exception as e:
+            print(f"⚠️ Row {i+1}: No clickable gridcell. {str(e)}")
+
+except Exception as e:
+    print(f"❌ Could not find rows. {str(e)}")
+
+finally:
+    print("\n🏁 Finished all rows.")
