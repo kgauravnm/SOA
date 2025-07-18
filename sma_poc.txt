@@ -1,55 +1,86 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.edge.service import Service
-from selenium.webdriver.edge.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 
-# Setup Edge WebDriver
-edge_driver_path = r"C:\path\to\msedgedriver.exe"  # ✅ Update path
-options = Options()
-options.add_experimental_option("detach", True)  # Keeps browser open after script
+# ✅ Setup driver
+edge_driver_path = "C:/path/to/msedgedriver.exe"  # 🔁 Replace with your path
+options = webdriver.EdgeOptions()
+options.add_argument("--start-maximized")
+driver = webdriver.Edge(executable_path=edge_driver_path, options=options)
+wait = WebDriverWait(driver, 30)
 
-driver = webdriver.Edge(service=Service(edge_driver_path), options=options)
+# ✅ Open Home Page
+driver.get("https://your-portal-url.com")  # 🔁 Replace with actual portal URL
 
-# Open SSO Login Page
-driver.get("https://your.portal.url")  # ✅ Update with actual URL
-print("🔒 Please complete SSO login... waiting 30 seconds")
-time.sleep(30)
+# ✅ Wait for processes table to load
+wait.until(EC.presence_of_element_located((By.CLASS_NAME, "ag-center-cols-container")))
 
-# Wait for AG-Grid rows to load
-try:
-    wait = WebDriverWait(driver, 30)
-    ag_rows = wait.until(EC.presence_of_all_elements_located(
-        (By.CSS_SELECTOR, "div.ag-center-cols-container div[role='row']")))
-    print(f"✅ Found {len(ag_rows)} AG-Grid rows")
-except Exception as e:
-    print(f"❌ Failed to load rows: {e}")
-    driver.quit()
-    exit()
+# ✅ Get all process rows (first screen)
+process_rows = driver.find_elements(By.CSS_SELECTOR, ".ag-center-cols-container .ag-row")
 
-# Debug loop: Try clicking rows and printing content
-for idx, row in enumerate(ag_rows[:5]):  # limit to 5 for testing
-    print(f"\n▶️ Processing row {idx + 1}")
+print(f"Total processes found: {len(process_rows)}")
+
+for index in range(len(process_rows)):
+    # Refetch rows again as DOM may refresh on each navigation
+    process_rows = driver.find_elements(By.CSS_SELECTOR, ".ag-center-cols-container .ag-row")
+
     try:
-        driver.execute_script("arguments[0].scrollIntoView(true);", row)
-        time.sleep(1)
+        # ✅ Click the process row to navigate to 2nd screen
+        process_rows[index].click()
+        print(f"\n➡️ Opened process {index + 1}")
 
-        # Print row structure
-        html = row.get_attribute("innerHTML")
-        print(f"📄 Row {idx + 1} inner HTML:\n{html}")
+        # ✅ Wait for second screen to load (add proper identifier)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'Action')]")))  # adjust if needed
 
-        # Try to click first cell if available
-        try:
-            cell = row.find_element(By.XPATH, ".//div[@role='gridcell']")
-            print(f"🟢 Clickable cell text: {cell.text.strip()}")
-            cell.click()
-            time.sleep(2)
-        except Exception as ce:
-            print(f"⚠️ Row {idx + 1}: No clickable gridcell. Message: {ce}")
+        # ✅ Wait for third screen grid to load
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "ag-center-cols-container")))
+        time.sleep(2)
+
+        # ✅ Loop through third screen rows
+        rows = driver.find_elements(By.CSS_SELECTOR, ".ag-center-cols-container .ag-row")
+
+        for row in rows:
+            try:
+                unmatched = row.find_element(By.XPATH, ".//div[@col-id='unmatched']").text
+                partial = row.find_element(By.XPATH, ".//div[@col-id='partiallyMatched']").text
+
+                unmatched_count = int(unmatched.strip()) if unmatched.strip().isdigit() else 0
+                partial_count = int(partial.strip()) if partial.strip().isdigit() else 0
+
+                if unmatched_count > 0 or partial_count > 0:
+                    print(f"✅ Unmatched: {unmatched_count}, Partial: {partial_count} ➜ Downloading...")
+
+                    # ✅ Click dropdown
+                    dropdown_button = wait.until(EC.element_to_be_clickable(
+                        (By.XPATH, "//button[contains(@aria-label, 'Export')]")
+                    ))
+                    dropdown_button.click()
+
+                    # ✅ Click 'Export Breaks Only'
+                    export_option = wait.until(EC.element_to_be_clickable(
+                        (By.XPATH, "//li[contains(text(), 'Export Breaks Only')]")
+                    ))
+                    export_option.click()
+
+                    print("✅ Download started.")
+                    time.sleep(3)
+                    break  # stop checking other rows
+
+            except Exception as e:
+                print("⚠️ Error parsing row:", e)
+                continue
+
+        # ✅ Navigate back to Home (1st screen)
+        driver.back()  # Use back() or navigate to homepage link directly
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "ag-center-cols-container")))
+        time.sleep(2)
 
     except Exception as e:
-        print(f"❌ Error in row {idx + 1}: {e}")
+        print(f"❌ Error on process {index + 1}: {e}")
+        driver.back()  # attempt to return in case of failure
+        time.sleep(2)
 
-print("\n✅ Finished all rows.")
+print("\n✅ All processes checked.")
+driver.quit()
