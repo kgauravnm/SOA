@@ -11,3 +11,5 @@ for ref in $(git for-each-ref --format="%(refname)" refs); do
 done
 
 git rev-list --all --objects | findstr application_local.yaml
+
+git push --mirror https://github.com/new-org/new-repo.git
