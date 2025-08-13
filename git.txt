@@ -21,3 +21,7 @@ git filter-repo \
   --replace-text <(echo 'regex::[ ]*.+$==>') \
   --force
 
+
+git filter-repo --path src/main/resources/application.yaml \
+  --replace-text <(echo "regex:(password:[[:space:]]*).+$\n\1") --force
+
