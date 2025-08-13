@@ -13,3 +13,11 @@ done
 git rev-list --all --objects | findstr application_local.yaml
 
 git push --mirror https://github.com/new-org/new-repo.git
+
+
+
+git filter-repo \
+  --path src/main/resources/application_local.yaml \
+  --replace-text <(echo 'regex::[ ]*.+$==>') \
+  --force
+
