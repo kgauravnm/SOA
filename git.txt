@@ -1,0 +1,11 @@
+git filter-repo --path src/main/resources/application_local.yaml --invert-paths --force
+
+for ref in $(git for-each-ref --format="%(refname)" refs); do
+    case "$ref" in
+        refs/heads/*|refs/tags/*)
+            ;;
+        *)
+            git update-ref -d "$ref"
+            ;;
+    esac
+done
