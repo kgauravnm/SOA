@@ -9,3 +9,5 @@ for ref in $(git for-each-ref --format="%(refname)" refs); do
             ;;
     esac
 done
+
+git rev-list --all --objects | findstr application_local.yaml
