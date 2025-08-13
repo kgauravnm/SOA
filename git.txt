@@ -16,3 +16,5 @@ git push --mirror https://github.com/new-org/new-repo.git
 
 regex:(password:[[:space:]]*).+$\n\1
 
+git filter-repo --replace-text replace.txt --force
+
